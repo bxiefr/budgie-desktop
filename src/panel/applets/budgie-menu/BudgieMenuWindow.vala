@@ -35,8 +35,7 @@ public class BudgieMenuWindow : Gtk.Popover {
 		header.get_style_context().add_class("budgie-menu-header");
 
 		this.search_entry = new Gtk.SearchEntry();
-		this.search_entry.grab_focus();
-		header.pack_start(search_entry, true, true, 0);
+        header.pack_start(search_entry, true, true, 0);
 
 		this.main_layout.pack_start(header, false, false, 0);
 
@@ -216,9 +215,9 @@ public class BudgieMenuWindow : Gtk.Popover {
 	}
 
 	public override void show() {
-		this.reset(true);
-		base.show();
-	}
+    base.show();
+    this.reset(true);
+}
 
 	/**
 	 * Opens our overlay menu and makes all other widgets insensitive.
