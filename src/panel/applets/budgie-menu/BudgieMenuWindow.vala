@@ -154,6 +154,17 @@ public class BudgieMenuWindow : Gtk.Popover {
 
 		// We should go away when an app is launched from the menu
 		this.view.app_launched.connect(this.hide);
+
+		// DEBUG: track show/hide/map/focus lifecycle
+		this.show.connect(() => {
+			print("[DEBUG] show signal fired\n");
+		});
+		this.map.connect(() => {
+			print("[DEBUG] map signal fired\n");
+		});
+		this.search_entry.notify["has-focus"].connect(() => {
+			print("[DEBUG] search_entry has_focus changed to: %s\n", this.search_entry.has_focus.to_string());
+		});
 	}
 
 	private void on_power_dialog_get(Object? obj, AsyncResult? res) {
@@ -217,25 +228,19 @@ public class BudgieMenuWindow : Gtk.Popover {
 	/**
 	 * Request keyboard focus for the search entry on the next main loop
 	 * iteration.
-	 *
-	 * This is deferred rather than done immediately because the popover's
-	 * underlying layer-shell surface isn't granted keyboard interactivity
-	 * (via gtk_layer_set_keyboard_mode) until *after*
-	 * budgie_popover_manager_show_popover() finishes calling
-	 * gtk_popover_popup(). Since gtk_popover_popup() is what synchronously
-	 * triggers this widget's show(), a grab_focus() call made directly
-	 * inside show()/reset() races against that later call and can silently
-	 * fail to take effect - most noticeably when the popover is opened via
-	 * a keybinding/DBus action rather than a direct mouse click.
 	 */
 	private void queue_focus_search() {
+		print("[DEBUG] queue_focus_search() called\n");
 		Idle.add(() => {
+			print("[DEBUG] Idle callback firing, calling grab_focus()\n");
 			this.search_entry.grab_focus();
+			print("[DEBUG] has_focus right after grab_focus(): %s\n", this.search_entry.has_focus.to_string());
 			return false;
 		});
 	}
 
 	public override void show() {
+		print("[DEBUG] show() override called\n");
 		base.show();
 		this.reset(true);
 	}
