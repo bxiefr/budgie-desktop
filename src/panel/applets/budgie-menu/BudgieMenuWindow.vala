@@ -215,9 +215,9 @@ public class BudgieMenuWindow : Gtk.Popover {
 	}
 
 	public override void show() {
-    base.show();
-    this.reset(true);
-}
+       base.show();
+       this.reset(true);
+    }
 
 	/**
 	 * Opens our overlay menu and makes all other widgets insensitive.
