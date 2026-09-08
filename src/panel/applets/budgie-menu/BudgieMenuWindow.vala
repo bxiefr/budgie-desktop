@@ -154,16 +154,6 @@ public class BudgieMenuWindow : Gtk.Popover {
 
 		// We should go away when an app is launched from the menu
 		this.view.app_launched.connect(this.hide);
-
-		// The popover needs to be mapped (i.e. actually visible on screen)
-		// before we can successfully hand keyboard focus to the search
-		// entry. Doing this in show(), before base.show() is called, is a
-		// no-op because the widget isn't realized/mapped yet. Binding to
-		// the "map" signal guarantees the focus request happens once the
-		// popover is actually on screen.
-		this.map.connect(() => {
-			this.search_entry.grab_focus();
-		});
 	}
 
 	private void on_power_dialog_get(Object? obj, AsyncResult? res) {
