@@ -35,7 +35,7 @@ public class BudgieMenuWindow : Gtk.Popover {
 		header.get_style_context().add_class("budgie-menu-header");
 
 		this.search_entry = new Gtk.SearchEntry();
-        header.pack_start(search_entry, true, true, 0);
+		header.pack_start(search_entry, true, true, 0);
 
 		this.main_layout.pack_start(header, false, false, 0);
 
@@ -154,6 +154,16 @@ public class BudgieMenuWindow : Gtk.Popover {
 
 		// We should go away when an app is launched from the menu
 		this.view.app_launched.connect(this.hide);
+
+		// The popover needs to be mapped (i.e. actually visible on screen)
+		// before we can successfully hand keyboard focus to the search
+		// entry. Doing this in show(), before base.show() is called, is a
+		// no-op because the widget isn't realized/mapped yet. Binding to
+		// the "map" signal guarantees the focus request happens once the
+		// popover is actually on screen.
+		this.map.connect(() => {
+			this.search_entry.grab_focus();
+		});
 	}
 
 	private void on_power_dialog_get(Object? obj, AsyncResult? res) {
@@ -206,7 +216,7 @@ public class BudgieMenuWindow : Gtk.Popover {
 		this.view.on_show();
 		this.overlay_menu.set_reveal_child(false);
 		this.search_entry.sensitive = true;
-		this.search_entry.grab_focus();
+		this.queue_focus_search();
 		this.view.set_sensitive(true);
 
 		if (clear_search) {
@@ -214,10 +224,31 @@ public class BudgieMenuWindow : Gtk.Popover {
 		}
 	}
 
+	/**
+	 * Request keyboard focus for the search entry on the next main loop
+	 * iteration.
+	 *
+	 * This is deferred rather than done immediately because the popover's
+	 * underlying layer-shell surface isn't granted keyboard interactivity
+	 * (via gtk_layer_set_keyboard_mode) until *after*
+	 * budgie_popover_manager_show_popover() finishes calling
+	 * gtk_popover_popup(). Since gtk_popover_popup() is what synchronously
+	 * triggers this widget's show(), a grab_focus() call made directly
+	 * inside show()/reset() races against that later call and can silently
+	 * fail to take effect - most noticeably when the popover is opened via
+	 * a keybinding/DBus action rather than a direct mouse click.
+	 */
+	private void queue_focus_search() {
+		Idle.add(() => {
+			this.search_entry.grab_focus();
+			return false;
+		});
+	}
+
 	public override void show() {
-       base.show();
-       this.reset(true);
-    }
+		base.show();
+		this.reset(true);
+	}
 
 	/**
 	 * Opens our overlay menu and makes all other widgets insensitive.
